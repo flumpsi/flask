@@ -1,0 +1,5 @@
+Flask>=2.3
+PyYAML>=6.0
+Werkzeug>=2.3
+gunicorn>=21.2
+
