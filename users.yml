@@ -1,0 +1,16 @@
+users:
+  Lud:
+    password: scrypt:32768:8:1$owK0ncuV7ijXgRkn$d5668ba849b525a458a97ffe8bb39bc9163370a42c371819d07a91163254e56caea4f493c823fa953e610eab6720a71d0364f5ffe81714947357f237ce7ba573
+    privilege: 2
+  flumpsi:
+    password: SuperSecret
+    privilege: 2
+  newaccount:
+    password: scrypt:32768:8:1$yNdVkllpAyvVAdUO$a5f0fc19c6a8aa9e17ed94dbbe010203fb35ebc91e21647a4f00a95a62d36f59aa6be78e587e10d720eadff35d5ea663b3e0ca32c0cc0c30d0bebd5ceccab5b7
+    privilege: 2
+  root:
+    password: scrypt:32768:8:1$XQB9TJNu7XX8MlLV$655afc31907e1d6564105998b8343a496a830c46daa08061c6bd713f456607e5a9dfdf8c8dfed9761e58c887fa2c764449c4e86ac702467f3f6dd5d95f80d9f9
+    privilege: 3
+  unprivileged:
+    password: SuperSecret
+    privilege: 1

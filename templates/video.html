@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ video.name }}</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    header { margin-bottom: 30px; }
+    video { max-width: 100%; height: auto; display: block; margin-bottom: 10px; }
+    .uploader { font-size: 0.9em; color: gray; margin-bottom: 20px; }
+    .description { margin-bottom: 30px; }
+    .comments { margin-top: 30px; }
+    .comments ul { list-style-type: none; padding-left: 0; }
+    .comments li { margin-bottom: 5px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+    form input[type="text"] { width: 70%; padding: 5px; }
+    form button { padding: 5px 10px; }
+    .top-buttons a { margin-right: 15px; }
+    .comment-delete { display: inline; margin-left: 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{ video.name }}</h1>
+    <div class="top-buttons">
+      {% if session.get('username') %}
+        <span>Logged in as {{ session['username'] }}</span>
+        {% if session.get('privilege',1)|int >= 2 %}
+          <a href="{{ url_for('upload') }}">Upload</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('signup') }}">Sign Up</a>
+      {% endif %}
+      <a href="{{ url_for('index') }}">Home</a>
+    </div>
+  </header>
+
+  <div class="video-container">
+    <video controls>
+      <source src="{{ url_for('serve_video', filename=video.video_file) }}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+
+    <div class="uploader">
+      Uploaded by <a href="{{ url_for('user_page', username=video.uploader) }}">{{ video.uploader }}</a>
+    </div>
+
+    <div class="description">
+      <p>{{ video.description }}</p>
+    </div>
+
+    <div class="comments">
+      <h3>Comments</h3>
+      <ul>
+        {% for comment in comments %}
+          <li>
+            {{ comment }}
+            {% if session.get('username') == video.uploader or session.get('privilege',1)|int >= 3 %}
+            <form class="comment-delete" method="POST" action="{{ url_for('delete_comment', video_file=video.video_file, index=loop.index0) }}">
+              <button type="submit">Delete</button>
+            </form>
+            {% endif %}
+          </li>
+        {% else %}
+          <li>No comments yet</li>
+        {% endfor %}
+      </ul>
+
+      {% if session.get('username') %}
+      <form method="POST" action="{{ url_for('add_comment', video_file=video.video_file) }}">
+        <input type="text" name="comment" placeholder="Add a comment..." required>
+        <button type="submit">Post</button>
+      </form>
+      {% else %}
+        <p><a href="{{ url_for('login') }}">Login</a> to comment.</p>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
+

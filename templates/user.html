@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ username }}'s Videos</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .video-list { display: flex; flex-wrap: wrap; gap: 20px; }
+    .video-card { width: 320px; text-align: center; }
+    .thumbnail { width: 320px; height: 180px; object-fit: cover; display: block; margin-bottom: 5px; cursor: pointer; }
+    a { text-decoration: none; color: black; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>{{ username }}'s Videos</h1>
+  <div class="video-list">
+    {% for video in videos %}
+      <div class="video-card">
+        <a href="{{ url_for('video_page', video_file=video.video_file) }}">
+          <img class="thumbnail" src="{{ url_for('serve_video', filename=video.thumbnail) }}" alt="{{ video.name }}">
+        </a>
+        <a href="{{ url_for('video_page', video_file=video.video_file) }}">{{ video.name }}</a>
+      </div>
+    {% endfor %}
+  </div>
+  <p><a href="{{ url_for('index') }}">Back to homepage</a></p>
+</body>
+</html>
+

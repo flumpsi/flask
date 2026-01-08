@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Video</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    header { margin-bottom: 30px; }
+    form { max-width: 500px; margin: 20px auto; display: flex; flex-direction: column; gap: 15px; }
+    label { font-weight: bold; }
+    .top-buttons { margin-bottom: 20px; }
+    .top-buttons a { margin-right: 15px; }
+    ul { list-style-type: none; padding-left: 0; }
+    li { color: red; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>
+      {% if session.get('username') %}
+        Welcome back, {{ session['username'] }}!
+      {% else %}
+        Welcome!
+      {% endif %}
+    </h1>
+    <div class="top-buttons">
+      {% if session.get('username') %}
+        <span>Logged in as {{ session['username'] }}</span>
+        {% if session.get('privilege',1)|int >= 2 %}
+          <a href="{{ url_for('upload') }}">Upload</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('signup') }}">Sign Up</a>
+      {% endif %}
+      <a href="{{ url_for('index') }}">Home</a>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for msg in messages %}
+          <li>{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" enctype="multipart/form-data">
+    <label for="title">Video Title:</label>
+    <input type="text" name="title" id="title" required>
+
+    <label for="description">Description:</label>
+    <textarea name="description" id="description" rows="4" required></textarea>
+
+    <label for="video_file">Video File (MP4):</label>
+    <input type="file" name="video" id="video_file" accept=".mp4" required>
+
+    <label for="thumbnail_file">Thumbnail Image (PNG/JPG):</label>
+    <input type="file" name="thumbnail" id="thumbnail_file" accept=".png,.jpg,.jpeg" required>
+
+    <button type="submit">Upload Video</button>
+  </form>
+
+  <p><a href="{{ url_for('index') }}">Back to homepage</a></p>
+</body>
+</html>
+

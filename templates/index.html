@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Homepage</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    header { margin-bottom: 30px; }
+    .video-list { display: flex; flex-wrap: wrap; gap: 20px; }
+    .video-card { width: 320px; text-align: center; }
+    .thumbnail {
+      width: 320px;
+      height: 180px;
+      object-fit: cover;
+      cursor: pointer;
+      display: block;
+      margin-bottom: 5px;
+    }
+    a { text-decoration: none; color: black; font-weight: bold; }
+    .uploader { font-size: 0.9em; color: gray; margin-top: 3px; }
+    .top-buttons { margin-bottom: 20px; }
+    .top-buttons a { margin-right: 15px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>
+      {% if session.get('username') %}
+        Welcome back to HitCircle, {{ session['username'] }}!
+      {% else %}
+        Welcome to HitCircle!
+      {% endif %}
+    </h1>
+
+    <div class="top-buttons">
+      {% if session.get('username') %}
+        <span>Logged in as {{ session['username'] }}</span>
+        {% if session.get('privilege',1)|int >= 2 %}
+          <a href="{{ url_for('upload') }}">Upload</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('signup') }}">Sign Up</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="video-list">
+    {% for video in videos %}
+      <div class="video-card">
+        <a href="{{ url_for('video_page', video_file=video.video_file) }}">
+          <img class="thumbnail" src="{{ url_for('serve_video', filename=video.thumbnail) }}" alt="{{ video.name }}">
+        </a>
+        <a href="{{ url_for('video_page', video_file=video.video_file) }}">{{ video.name }}</a>
+        {% if video.uploader %}
+          <div class="uploader">
+            Uploaded by <a href="{{ url_for('user_page', username=video.uploader) }}">{{ video.uploader }}</a>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</body>
+</html>
+
