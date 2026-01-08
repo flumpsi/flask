@@ -2,81 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{{ video.name }}</title>
+  <title>
+    {% if session.get('username') %}
+      Welcome back, {{ session['username'] }}!
+    {% else %}
+      Welcome!
+    {% endif %}
+  </title>
   <style>
     body { font-family: sans-serif; margin: 20px; }
-    header { margin-bottom: 30px; }
-    video { max-width: 100%; height: auto; display: block; margin-bottom: 10px; }
-    .uploader { font-size: 0.9em; color: gray; margin-bottom: 20px; }
-    .description { margin-bottom: 30px; }
-    .comments { margin-top: 30px; }
-    .comments ul { list-style-type: none; padding-left: 0; }
-    .comments li { margin-bottom: 5px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
-    form input[type="text"] { width: 70%; padding: 5px; }
-    form button { padding: 5px 10px; }
+    header { margin-bottom: 20px; }
+    .top-buttons { margin-bottom: 20px; }
     .top-buttons a { margin-right: 15px; }
-    .comment-delete { display: inline; margin-left: 10px; }
+    video { display: block; margin-bottom: 20px; max-width: 100%; }
+    #danmaku-container { position: absolute; top: 0; left: 0; pointer-events: none; width: 640px; height: 360px; }
+    .comment-list { margin-top: 20px; }
+    .comment { border-bottom: 1px solid #ccc; padding: 5px 0; }
+    .comment button { margin-left: 10px; }
+    form { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; max-width: 500px; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>{{ video.name }}</h1>
-    <div class="top-buttons">
-      {% if session.get('username') %}
-        <span>Logged in as {{ session['username'] }}</span>
-        {% if session.get('privilege',1)|int >= 2 %}
-          <a href="{{ url_for('upload') }}">Upload</a>
-        {% endif %}
-        <a href="{{ url_for('logout') }}">Logout</a>
-      {% else %}
-        <a href="{{ url_for('login') }}">Login</a>
-        <a href="{{ url_for('signup') }}">Sign Up</a>
+<header>
+  <h1>
+    {% if session.get('username') %}
+      Welcome back, {{ session['username'] }}!
+    {% else %}
+      Welcome!
+    {% endif %}
+  </h1>
+  <div class="top-buttons">
+    <a href="{{ url_for('index') }}">Home</a>
+    {% if session.get('username') %}
+      {% if session.get('privilege',1)|int >= 2 %}
+        <a href="{{ url_for('upload') }}">Upload</a>
       {% endif %}
-      <a href="{{ url_for('index') }}">Home</a>
-    </div>
-  </header>
-
-  <div class="video-container">
-    <video controls>
-      <source src="{{ url_for('serve_video', filename=video.video_file) }}" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-
-    <div class="uploader">
-      Uploaded by <a href="{{ url_for('user_page', username=video.uploader) }}">{{ video.uploader }}</a>
-    </div>
-
-    <div class="description">
-      <p>{{ video.description }}</p>
-    </div>
-
-    <div class="comments">
-      <h3>Comments</h3>
-      <ul>
-        {% for comment in comments %}
-          <li>
-            {{ comment }}
-            {% if session.get('username') == video.uploader or session.get('privilege',1)|int >= 3 %}
-            <form class="comment-delete" method="POST" action="{{ url_for('delete_comment', video_file=video.video_file, index=loop.index0) }}">
-              <button type="submit">Delete</button>
-            </form>
-            {% endif %}
-          </li>
-        {% else %}
-          <li>No comments yet</li>
-        {% endfor %}
-      </ul>
-
-      {% if session.get('username') %}
-      <form method="POST" action="{{ url_for('add_comment', video_file=video.video_file) }}">
-        <input type="text" name="comment" placeholder="Add a comment..." required>
-        <button type="submit">Post</button>
-      </form>
-      {% else %}
-        <p><a href="{{ url_for('login') }}">Login</a> to comment.</p>
-      {% endif %}
-    </div>
+      <span>Logged in as {{ session['username'] }}</span>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">Login</a>
+      <a href="{{ url_for('signup') }}">Sign Up</a>
+    {% endif %}
   </div>
+</header>
+
+<h2>{{ video.name }}</h2>
+<p>{{ video.description }}</p>
+{% if video.uploader %}
+  <p>Uploaded by <a href="{{ url_for('user_page', username=video.uploader) }}">{{ video.uploader }}</a></p>
+{% endif %}
+
+<div style="position: relative; width: 640px; height: 360px;">
+  <video id="player" controls>
+    <source src="{{ url_for('serve_video', filename=video.video_file) }}" type="video/mp4">
+  </video>
+  <div id="danmaku-container"></div>
+</div>
+
+<h3>Comments</h3>
+<div class="comment-list">
+  {% for c in comments %}
+    {% set parts = c.split(" ", 2) %}
+    {% set ts = parts[1] %}
+    {% set user_comment = parts[2] %}
+    <div class="comment">
+      <strong>{{ user_comment.split(':',1)[0] }}</strong>: {{ user_comment.split(':',1)[1].strip() }} 
+      <em>({{ ts }}s)</em>
+      {% if session.get('username') == video.uploader or session.get('privilege',1)|int >= 3 %}
+        <form method="POST" action="{{ url_for('delete_comment', video_file=video.video_file, index=loop.index0) }}" style="display:inline">
+          <button type="submit">Delete</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+{% if session.get('username') %}
+<form method="POST" action="{{ url_for('add_comment', video_file=video.video_file) }}">
+  <label for="comment">Your Comment:</label>
+  <input type="text" name="comment" id="comment" required>
+
+  <label>Video Timestamp (seconds, optional):</label>
+  <input type="number" step="0.1" name="timestamp" placeholder="0">
+
+  <button type="submit">Post Comment</button>
+</form>
+{% else %}
+<p><a href="{{ url_for('login') }}">Log in</a> to post comments.</p>
+{% endif %}
+
+<script>
+const video = document.getElementById("player");
+const container = document.getElementById("danmaku-container");
+
+// Parse comments
+const comments = [
+  {% for c in comments %}
+    {% set parts = c.split(" ", 2) %}
+    {ts: {{ parts[1] }}, text: "{{ parts[2].split(':',1)[1].strip() }}", user: "{{ parts[2].split(':',1)[0] }}", shown: false},
+  {% endfor %}
+];
+
+function showDanmaku(comment) {
+    const span = document.createElement("span");
+    span.textContent = comment.text;
+    span.style.position = "absolute";
+    span.style.whiteSpace = "nowrap";
+    span.style.top = Math.random() * (container.offsetHeight - 20) + "px";
+    span.style.left = container.offsetWidth + "px";
+    span.style.color = "white";
+    span.style.textShadow = "0 0 2px black";
+    container.appendChild(span);
+
+    let left = container.offsetWidth;
+    const speed = 2 + Math.random()*2;
+    const interval = setInterval(() => {
+        left -= speed;
+        span.style.left = left + "px";
+        if(left + span.offsetWidth < 0) {
+            span.remove();
+            clearInterval(interval);
+        }
+    }, 16);
+}
+
+video.addEventListener("timeupdate", () => {
+    const current = video.currentTime;
+    comments.forEach(c => {
+        if(!c.shown && Math.abs(c.ts - current) < 0.5) {
+            showDanmaku(c);
+            c.shown = true;
+        }
+    });
+});
+</script>
 </body>
 </html>
 

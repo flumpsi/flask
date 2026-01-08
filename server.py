@@ -175,18 +175,30 @@ def add_comment(video_file):
     video = get_video_by_filename(video_file)
     if not video:
         abort(404)
+
     comment_text = request.form.get("comment")
+    video_ts = request.form.get("timestamp")  # optional
     if not comment_text:
         flash("Comment cannot be empty")
         return redirect(url_for("video_page", video_file=video_file))
+
+    try:
+        video_ts = float(video_ts) if video_ts else 0.0
+    except ValueError:
+        flash("Invalid timestamp, using 0")
+        video_ts = 0.0
+
     comment_file = video.get("comments_file")
     if not comment_file:
         flash("No comment file defined")
         return redirect(url_for("video_page", video_file=video_file))
+
     comment_path = os.path.join(VIDEO_FOLDER, comment_file)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     with open(comment_path, "a") as f:
-        f.write(f"[{timestamp}] {session['username']}: {comment_text}\n")
+        # store: server_timestamp video_timestamp username: comment
+        f.write(f"[{timestamp}] {video_ts} {session['username']}: {comment_text}\n")
+
     flash("Comment added")
     return redirect(url_for("video_page", video_file=video_file))
 
